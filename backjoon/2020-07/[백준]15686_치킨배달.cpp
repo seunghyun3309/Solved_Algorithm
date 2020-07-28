@@ -3,102 +3,75 @@
 #include <algorithm>
 #include <cmath>
 #include <cstring>
+#include <vector>
 using namespace std;
-int N,M;
+
+int N, M;
 int map[101][101];
-int geori[101][101] = { 0, };
-int gg;
-bool check[101][101] = { false, };
-int r,s;
+int dist;
+int dist_sum = 0;
+vector<pair<int, int>> v1;
+vector<pair<int, int>> v2;
+
+bool check[101] = { false, };
 int result = 98765432;
 
-void dfs(int xpos, int ypos, int cnt)
+int calc(pair<int, int> p1, pair<int, int> p2)
+{
+	return abs(p1.second - p2.second) + abs(p1.first - p2.first);
+}
+
+void dfs(int cnt, int len)
 {
 	if (cnt == M)
 	{
-		memset(geori, 0, sizeof(geori));
-		r = 0;
-		for (int i = 0; i < N; i++)
+		dist_sum = 0;
+		for (int i = 0; i < v2.size(); i++) // 집집마다 최소를 찾아야 함
 		{
-			for (int j = 0; j < N; j++)
+			dist = 98765432;
+			for (int j = 0; j < v1.size(); j++) //치킨집마다 선택된 치킨집에서 
 			{
-				if (check[i][j]) //치킨집이면 돌아
+				if (check[j]) //j번째 치킨집을 선택
 				{
-					for (int m = 0; m < N; m++)
-					{
-						for (int n = 0; n < N; n++)
-						{
-							if (map[m][n] == 1) //집을 찾으면
-							{
-								s = abs(i - m) + abs(j - n);
-								if (geori[m][n] == 0 || s < geori[m][n]) //거리가 0일수는 없으므로 0이라면 초기값으로 가정
-									geori[m][n] = s; //각각의 치킨거리를 설정
-							}
-						}
-					}
+					dist = min(dist, calc(v1[j], v2[i]));
 				}
 			}
+			dist_sum += dist;
 		}
-
-		for (int m = 0; m < N; m++) //집까지의 치킨거리의 합을 구하는 곳
-		{
-			for (int n = 0; n < N; n++)
-			{
-				if (map[m][n] == 1) //집을 찾으면
-				{
-					r += geori[m][n]; //치킨거리를 더해준다.
-				}
-			}
-		}
-
-		/*for (int i = 0; i < N; i++)
-		{
-			for (int j = 0; j < N; j++)
-			{
-				cout << check[i][j] << " ";
-			}
-			cout << endl;
-		}
-		cout << r << endl << endl;*/
-
-		if (result > r)
-			result = r;
-
+		// cout<<dist_sum<<endl;
+		if (result > dist_sum) //dist_sum이 더 작으면 업데이트
+			result = dist_sum;
 		return;
 	}
-	else // 2인 치킨집을 설정하면 cnt늘려서 재귀돌려 
-	{
-		for (int i = 0; i < N; i++)
-		{
-			for (int j = 0; j < N; j++)
-			{
-				if (map[i][j] == 2&&!check[i][j])
-				{
-					check[i][j] = true;
-					dfs(i, j, cnt + 1);
-					check[i][j] = false;
-				}
-			}
-		}
-	}
-}
 
+	else if (len == v1.size()) return; //치킨집을 모두 선택했으면
+
+	check[len] = true; //len번째 치킨집을 선택
+	dfs(cnt + 1, len + 1);
+
+	check[len] = false;
+	dfs(cnt , len + 1);
+
+}
 int main()
 {
 	ios::sync_with_stdio(false);
 	cin.tie(NULL);
 
-	cin >>N>> M;
+	cin >> N >> M;
 
 	for (int i = 0; i < N; i++)
 	{
-		for(int j = 0; j < N; j++)
+		for (int j = 0; j < N; j++)
 		{
 			cin >> map[i][j];
+			if (map[i][j] == 2) v1.push_back({ i,j });
+			if (map[i][j] == 1) v2.push_back({ i,j });
+
 		}
 	}
 
-	dfs(0, 0, 0);
+	dfs(0,0); //앞은 선택한 개수 뒤는 선택할 개수
 	cout << result;
 	return 0;
 }
